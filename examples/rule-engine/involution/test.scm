@@ -28,7 +28,7 @@
 ;; ~(~X) || ~(~X) = X || X
 (define test_7 (Or test_2 test_2))
 
-;; `Up` isn't a member of involuntary functions. So, the ff shouldn't be reduced by involution.
+;; `Up` isn't a member of involutary functions. So, the ff shouldn't be reduced by involution.
 (define test_8
     (Evaluation
         (Predicate "Up")
@@ -39,5 +39,3 @@
 ;(cog-execute! involution-rule)
 
 ;(reduce test_8)
-
-;; Problems 1. Check member 2. get rid of intermediate results

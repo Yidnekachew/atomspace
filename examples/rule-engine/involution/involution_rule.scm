@@ -4,13 +4,13 @@
 ;; An involution is a function that, when applied twice, brings one back to the
 ;; starting point.
 ;;              f(f(x)) = x for all x in the domain of f.
-;; See https://en.wikipedia.org/wiki/Involution_(mathematics)) for more details.
+;; See https://en.wikipedia.org/wiki/Involution_(mathematics) for more details.
 ;; -----------------------------------------------------------------------------
 
-;; list of involuntary functions.
-(define involuntary_functions (Concept "involuntary functions"))
+;; list of involutary functions.
+(define involutary_functions (Concept "involutary functions"))
 
-(Member (Predicate "Not") involuntary_functions)
+(Member (Predicate "Not") involutary_functions)
 
 (define involution-rule
     (BindLink
@@ -21,7 +21,7 @@
             (Variable "$x")
         )
 
-        ;; If function f is one of the involuntary functions, then f(f(x)) = x.
+        ;; If function f is one of the involutary functions, then f(f(x)) = x.
         (AndLink
             (Evaluation
                 (Variable "$f")
@@ -30,9 +30,9 @@
                     (Variable "$x")))
             (Member
                 (Variable "$f")
-                involuntary_functions))
+                involutary_functions))
 
-        (Variable "$f")
+        (Variable "$x")
 ))
 
 (define involution-rule-name (DefinedSchema "involution-rule"))
@@ -49,5 +49,5 @@
                     (Variable "$x")))
             (Member
                 (Variable "$f")
-                involuntary_functions))
+                involutary_functions))
 ))
