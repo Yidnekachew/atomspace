@@ -77,7 +77,7 @@ bool Instantiator::walk_sequence(HandleSeq& oset_results,
 		// GlobNodes are grounded by a ListLink of everything that
 		// the GlobNode matches. Unwrap the list, and insert each
 		// of the glob elements in sequence.
-		if (_context.is_unquoted() and GLOB_NODE == h->getType() and hg != h)
+		if (_context.is_unquoted() and GLOB_NODE == h->get_type() and hg != h)
 		{
 			for (const Handle& gloe: hg->getOutgoingSet())
 			{
@@ -100,7 +100,7 @@ bool Instantiator::walk_sequence(HandleSeq& oset_results,
 
 Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 {
-	Type t = expr->getType();
+	Type t = expr->get_type();
 
 	// Store the current context so we can update it for subsequent
 	// recursive calls of walk_tree.
@@ -111,14 +111,14 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 	// as it is serving its quoting or unquoting function.
 	if (_avoid_discarding_quotes_level == 0 and context_cp.consumable(t))
 	{
-		if (1 != expr->getArity())
+		if (1 != expr->get_arity())
 			throw InvalidParamException(TRACE_INFO,
 			                            "QuoteLink/UnquoteLink has "
 			                            "unexpected arity!");
 		return walk_tree(expr->getOutgoingAtom(0), silent);
 	}
 
-	if (expr->isNode())
+	if (expr->is_node())
 	{
 		if (context_cp.is_quoted())
 			return expr;
@@ -183,8 +183,6 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 		if (_eager)
 		{
 			ppp = PutLinkCast(expr);
-			if (nullptr == ppp)
-				ppp = createPutLink(*LinkCast(expr));
 			// Execute the values in the PutLink before doing the
 			// beta-reduction. Execute the body only after the
 			// beta-reduction has been done.
@@ -204,8 +202,6 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 		{
 			Handle hexpr(beta_reduce(expr, *_vmap));
 			ppp = PutLinkCast(hexpr);
-			if (nullptr == ppp)
-				ppp = createPutLink(*LinkCast(hexpr));
 		}
 
 		// Step one: beta-reduce.
@@ -213,7 +209,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 
 		// Step two: execute the resulting body.
 		// (unless its not executable)
-		if (DONT_EXEC_LINK == red->getType())
+		if (DONT_EXEC_LINK == red->get_type())
 			return red->getOutgoingAtom(0);
 
 		Handle rex(walk_tree(red, silent));
@@ -227,7 +223,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 		// awkward.  I'm confused about how to handle this best.
 		// The behavior tree uses this!
 		// Anyway, do_evaluate() will throw if rex is not evaluatable.
-		if (SET_LINK == rex->getType())
+		if (SET_LINK == rex->get_type())
 		{
 			for (const Handle& plo : rex->getOutgoingSet())
 			{
@@ -256,11 +252,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 	// ask for. So we always eager-evaluate those args.
 	if (EXECUTION_OUTPUT_LINK == t)
 	{
-		// XXX Force syntax checking; normally this would be done in the
-		// atomspace factory, but that is currently broken, so do it here.
 		ExecutionOutputLinkPtr eolp(ExecutionOutputLinkCast(expr));
-		if (nullptr == eolp)
-			eolp = createExecutionOutputLink(expr->getOutgoingSet());
 
 		// At this time, the GSN or the DSN is always in position 0
 		// of the outgoing set, and the ListLink of arguments is always
@@ -270,15 +262,13 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 		Handle args(eolp->get_args());
 
 		// If its a DSN, obtain the correct body for it.
-		if (DEFINED_SCHEMA_NODE == sn->getType())
+		if (DEFINED_SCHEMA_NODE == sn->get_type())
 			sn = DefineLink::get_definition(sn);
 
 		// If its an anonymous function link, execute it here.
-		if (LAMBDA_LINK == sn->getType())
+		if (LAMBDA_LINK == sn->get_type())
 		{
 			LambdaLinkPtr flp(LambdaLinkCast(sn));
-			if (NULL == flp)
-				flp = createLambdaLink(*LinkCast(sn));
 
 			// Two-step process. First, plug the arguments into the
 			// function; i.e. perform beta-reduction. Second, actually
@@ -333,7 +323,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 		walk_sequence(oset_results, expr->getOutgoingSet(), silent);
 		for (const Handle& h: oset_results)
 		{
-			Type ht = h->getType();
+			Type ht = h->get_type();
 			if (VARIABLE_NODE != ht and GLOB_NODE != ht)
 				_as->remove_atom(h, true);
 		}
@@ -353,14 +343,13 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 			// function itself.
 			HandleSeq oset_results;
 			walk_sequence(oset_results, expr->getOutgoingSet(), silent);
-			Handle fh(classserver().factory(Handle(createLink(oset_results, t))));
+			Handle fh(createLink(oset_results, t));
 			FoldLinkPtr flp(FoldLinkCast(fh));
 			return flp->execute(_as);
 		}
 		else
 		{
 			Handle hexpr(beta_reduce(expr, *_vmap));
-			hexpr = classserver().factory(hexpr);
 			FoldLinkPtr flp(FoldLinkCast(hexpr));
 			return flp->execute(_as);
 		}
@@ -383,8 +372,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 			HandleSeq oset_results;
 			walk_sequence(oset_results, expr->getOutgoingSet(), silent);
 
-			FunctionLinkPtr flp(FunctionLinkCast(
-				classserver().factory(Handle(createLink(oset_results, t)))));
+			FunctionLinkPtr flp(FunctionLinkCast(createLink(oset_results, t)));
 			return flp->execute(_as);
 		}
 		else
@@ -394,8 +382,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 			// Also, the number of arguments is not fixed, its always variadic.
 			// Perform substitution on all arguments before applying the
 			// function itself.
-			FunctionLinkPtr flp(FunctionLinkCast(
-				classserver().factory(expr)));
+			FunctionLinkPtr flp(FunctionLinkCast(expr));
 			return flp->execute(_as);
 		}
 	}
@@ -446,7 +433,7 @@ mere_recursive_call:
 	bool changed = walk_sequence(oset_results, expr->getOutgoingSet(), silent);
 	if (changed)
 	{
-		LinkPtr subl = createLink(oset_results, t);
+		Handle subl(createLink(oset_results, t));
 		subl->copyValues(expr);
 		return _as->add_atom(subl);
 	}

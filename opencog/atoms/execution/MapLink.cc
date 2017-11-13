@@ -38,7 +38,7 @@ void MapLink::init(void)
 
 	// First argument must be a function of some kind.  All functions
 	// are specified using a ScopeLink, to bind the input-variables.
-	Type tscope = _outgoing[0]->getType();
+	Type tscope = _outgoing[0]->get_type();
 	if (classserver().isA(tscope, SCOPE_LINK))
 	{
 		_pattern = ScopeLinkCast(_outgoing[0]);
@@ -127,7 +127,7 @@ MapLink::MapLink(const Link &l)
 	: FunctionLink(l)
 {
 	// Type must be as expected
-	Type tmap = l.getType();
+	Type tmap = l.get_type();
 	if (not classserver().isA(tmap, MAP_LINK))
 	{
 		const std::string& tname = classserver().getTypeName(tmap);
@@ -165,7 +165,7 @@ bool MapLink::extract(const Handle& termpat,
 {
 	if (termpat == ground) return true;
 
-	Type t = termpat->getType();
+	Type t = termpat->get_type();
 	// If its a variable, then see if we know its value already;
 	// If not, then record it.
 	if (VARIABLE_NODE == t and 0 < _varset->count(termpat))
@@ -207,10 +207,10 @@ bool MapLink::extract(const Handle& termpat,
 	}
 
 	// Whatever they are, the type must agree.
-	if (t != ground->getType()) return false;
+	if (t != ground->get_type()) return false;
 
 	// If they are (non-variable) nodes, they must be identical.
-	if (not termpat->isLink())
+	if (not termpat->is_link())
 		return (termpat == ground);
 
 	const HandleSeq& tlo = termpat->getOutgoingSet();
@@ -238,7 +238,7 @@ bool MapLink::extract(const Handle& termpat,
 	size_t ip=0, jg=0;
 	for (ip=0, jg=0; ip<tsz and jg<gsz; ip++, jg++)
 	{
-		Type ptype = tlo[ip]->getType();
+		Type ptype = tlo[ip]->get_type();
 		if (GLOB_NODE == ptype)
 		{
 			HandleSeq glob_seq;
@@ -297,8 +297,8 @@ bool MapLink::extract(const Handle& termpat,
 			}
 
 			// If we are here, we've got a match. Record it.
-			LinkPtr glp(createLink(glob_seq, LIST_LINK));
-			valmap.emplace(std::make_pair(glob, glp->getHandle()));
+			Handle glp(createLink(glob_seq, LIST_LINK));
+			valmap.emplace(std::make_pair(glob, glp));
 		}
 		else
 		{
@@ -355,7 +355,7 @@ Handle MapLink::rewrite_one(const Handle& cterm, AtomSpace* scratch) const
 	// variable.
 	size_t nv = valseq.size();
 	if (1 < nv)
-		return Handle(createLink(valseq, LIST_LINK));
+		return createLink(valseq, LIST_LINK);
 	else if (1 == nv)
 		return valseq[0];
 	return Handle::UNDEFINED;
@@ -369,7 +369,7 @@ Handle MapLink::execute(AtomSpace* scratch) const
 	// If there is a single value, apply the map to the single value.
 	// If there is a set of values, apply the map to the set.
 	// If there is a list of values, apply the map to the list.
-	Type argtype = valh->getType();
+	Type argtype = valh->get_type();
 	if (SET_LINK == argtype or LIST_LINK == argtype)
 	{
 		HandleSeq remap;
@@ -378,7 +378,7 @@ Handle MapLink::execute(AtomSpace* scratch) const
 			Handle mone = rewrite_one(h, scratch);
 			if (nullptr != mone) remap.emplace_back(mone);
 		}
-		return Handle(createLink(remap, argtype));
+		return createLink(remap, argtype);
 	}
 
 	// Its a singleton. Just remap that.

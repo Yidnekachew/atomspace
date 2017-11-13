@@ -57,7 +57,7 @@ void VarScraper::find_vars(HandleSeq& varseq, HandleSet& varset,
 {
 	for (const Handle& h : oset)
 	{
-		Type t = h->getType();
+		Type t = h->get_type();
 
 		if ((VARIABLE_NODE == t or GLOB_NODE == t) and
 		    _quotation.is_unquoted() and
@@ -68,7 +68,7 @@ void VarScraper::find_vars(HandleSeq& varseq, HandleSet& varset,
 			varset.insert(h);
 		}
 
-		if (not h->isLink()) continue;
+		if (not h->is_link()) continue;
 
 		bool issco = _quotation.is_unquoted()
 			and classserver().isA(t, SCOPE_LINK);
@@ -78,12 +78,8 @@ void VarScraper::find_vars(HandleSeq& varseq, HandleSet& varset,
 			// Save the current set of bound variables...
 			bsave = _bound_vars;
 
-			// If we can cast to ScopeLink, then do so; otherwise,
-			// take the low road, and let ScopeLink constructor
-			// do the bound-variable extraction.
+			// The ScopeLink ctor did the bound-variable extraction.
 			ScopeLinkPtr sco(ScopeLinkCast(h));
-			if (nullptr == sco)
-				sco = ScopeLinkCast(classserver().factory(h));
 			const Variables& vees = sco->get_variables();
 			for (const Handle& v : vees.varseq) _bound_vars.insert(v);
 		}
@@ -187,9 +183,9 @@ Handle FreeVariables::substitute_scoped(const Handle& term,
 
 	// If its a node, and its not a variable, then it is a constant,
 	// and just return that.
-	if (not term->isLink()) return term;
+	if (not term->is_link()) return term;
 
-	Type ty = term->getType();
+	Type ty = term->get_type();
 
 	// Update for subsequent recursive calls of substitute_scoped
 	quotation.update(ty);
@@ -245,7 +241,7 @@ Handle FreeVariables::substitute_scoped(const Handle& term,
 				oset.emplace_back(substitute_scoped(h, args, silent,
 				                                    hidden_map, quotation));
 			}
-			return classserver().factory(Handle(createLink(oset, term->getType())));
+			return createLink(oset, term->get_type());
 		}
 	}
 
@@ -256,10 +252,10 @@ Handle FreeVariables::substitute_scoped(const Handle& term,
 		// GlobNodes are matched with a list of one or more values.
 		// Those values need to be in-lined, stripping off the list
 		// that wraps them up.  See MapLinkUTest for examples.
-		if (GLOB_NODE == h->getType())
+		if (GLOB_NODE == h->get_type())
 		{
 			Handle glst(substitute_scoped(h, args, silent, index_map, quotation));
-			if (glst->isNode())
+			if (glst->is_node())
 				return glst;
 			for (const Handle& gl : glst->getOutgoingSet())
 				oset.emplace_back(gl);
@@ -269,7 +265,7 @@ Handle FreeVariables::substitute_scoped(const Handle& term,
 				substitute_scoped(h, args, silent, index_map, quotation));
 	}
 
-	return classserver().factory(Handle(createLink(oset, term->getType())));
+	return createLink(oset, term->get_type());
 }
 
 /* ================================================================= */
@@ -326,7 +322,7 @@ bool Variables::is_equal(const Variables& other, size_t index) const
 
 	// If one is a GlobNode, and the other a VariableNode,
 	// then its a mismatch.
-	if (vme->getType() != voth->getType()) return false;
+	if (vme->get_type() != voth->get_type()) return false;
 
 	// If typed, types must match.
 	auto sime = _simple_typemap.find(vme);
@@ -422,7 +418,7 @@ bool Variables::is_type(const Handle& var, const Handle& val) const
 	if (_simple_typemap.end() != tit)
 	{
 		const std::set<Type> &tchoice = tit->second;
-		Type htype = val->getType();
+		Type htype = val->get_type();
 		std::set<Type>::const_iterator allow = tchoice.find(htype);
 
 		// If the value has the simple type, then we are good to go;
@@ -710,9 +706,8 @@ Handle Variables::get_vardecl() const
 			for (Type t : sit->second)
 				types.push_back(Handle(createTypeNode(t)));
 			Handle types_h = types.size() == 1 ? types[0]
-				: Handle(createLink(types, TYPE_CHOICE));
-			vars.push_back(Handle(createLink(TYPED_VARIABLE_LINK,
-			                                 var, types_h)));
+				: createLink(types, TYPE_CHOICE);
+			vars.push_back(createLink(TYPED_VARIABLE_LINK, var, types_h));
 			continue;
 		}
 

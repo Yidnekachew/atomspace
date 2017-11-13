@@ -83,7 +83,7 @@ void ProtocolBufferSerializer::deserializeAtom(
 //{
 //    //serializeAttentionValueHolder(atom, atomMessage->mutable_attentionvalueholder());
 //
-//    atomMessage->set_handle(atom.getHandle().value());
+//    atomMessage->set_handle(atom.get_handle().value());
 //
 //    HandleEntry* next=atom.incoming;
 //    while(next)
@@ -176,9 +176,9 @@ void ProtocolBufferSerializer::serializeCountTruthValue(
 {
     ZMQSingleTruthValueMessage *singleTruthValue=truthValueMessage->add_singletruthvalue();
     singleTruthValue->set_truthvaluetype(ZMQTruthValueTypeCount);
-    singleTruthValue->set_mean(tv.getMean());
-    singleTruthValue->set_count(tv.getCount());
-    singleTruthValue->set_confidence(tv.getConfidence());
+    singleTruthValue->set_mean(tv.get_mean());
+    singleTruthValue->set_count(tv.get_count());
+    singleTruthValue->set_confidence(tv.get_confidence());
 }
 
 IndefiniteTruthValuePtr ProtocolBufferSerializer::deserializeIndefiniteTruthValue(
@@ -216,9 +216,9 @@ void ProtocolBufferSerializer::serializeIndefiniteTruthValue(
     singleTruthValue->set_confidencelevel(tv.getConfidenceLevel());
     singleTruthValue->set_symmetric(tv.isSymmetric());
     singleTruthValue->set_diff(tv.getDiff());
-    singleTruthValue->set_mean(tv.getMean());
-    singleTruthValue->set_count(tv.getCount());
-    singleTruthValue->set_confidence(tv.getConfidence());
+    singleTruthValue->set_mean(tv.get_mean());
+    singleTruthValue->set_count(tv.get_count());
+    singleTruthValue->set_confidence(tv.get_confidence());
     for (const double *f: tv.getFirstOrderDistribution())
     {
         singleTruthValue->add_firstorderdistribution(*f);
@@ -228,7 +228,7 @@ void ProtocolBufferSerializer::serializeIndefiniteTruthValue(
 NodePtr ProtocolBufferSerializer::deserializeNode(
         const ZMQAtomMessage& atomMessage)
 {
-	NodePtr nodePtr(createNode(atomMessage.type(), atomMessage.name()));
+	Handle nodePtr(createNode(atomMessage.type(), atomMessage.name()));
     if (atomMessage.has_truthvalue()) {
     TruthValuePtr tv;
     	tv = deserialize(atomMessage.truthvalue());
@@ -237,7 +237,7 @@ NodePtr ProtocolBufferSerializer::deserializeNode(
 	tlbuf.addAtom(nodePtr, atomMessage.handle());
     deserializeAtom(atomMessage, *nodePtr);
 
-    return nodePtr;
+    return NodeCast(nodePtr);
 }
 
 LinkPtr ProtocolBufferSerializer::deserializeLink(
@@ -249,7 +249,7 @@ LinkPtr ProtocolBufferSerializer::deserializeLink(
 		// oset[i] = Handle(atomMessage.outgoing(i));
     }
 
-	LinkPtr linkPtr(createLink(oset, atomMessage.type()));
+	Handle linkPtr(createLink(oset, atomMessage.type()));
     if (atomMessage.has_truthvalue()) {
     TruthValuePtr tv;
     	tv = deserialize(atomMessage.truthvalue());
@@ -258,7 +258,7 @@ LinkPtr ProtocolBufferSerializer::deserializeLink(
 	tlbuf.addAtom(linkPtr, atomMessage.handle());
     deserializeAtom(atomMessage, *linkPtr);
 
-    return linkPtr;
+    return LinkCast(linkPtr);
 }
 
 //void ProtocolBufferSerializer::serializeLink(
@@ -299,8 +299,8 @@ void ProtocolBufferSerializer::serializeSimpleTruthValue(
 {
     ZMQSingleTruthValueMessage *singleTruthValue=truthValueMessage->add_singletruthvalue();
     singleTruthValue->set_truthvaluetype(ZMQTruthValueTypeSimple);
-    singleTruthValue->set_mean(tv.getMean());
-    singleTruthValue->set_count(tv.getCount());
+    singleTruthValue->set_mean(tv.get_mean());
+    singleTruthValue->set_count(tv.get_count());
 }
 
 void ProtocolBufferSerializer::serialize(TruthValue &tv, ZMQTruthValueMessage* truthValueMessage)

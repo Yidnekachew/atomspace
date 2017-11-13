@@ -93,7 +93,7 @@ bool Satisfier::search_finished(bool done)
 	// Evaluating the pattern body only makes sense if it is sequential
 	// (ordered) -- if the body is an unordered AndLink, or if its a
 	// ChoiceLink, etc, this makes no sense.
-	Type btype = _pattern_body->getType();
+	Type btype = _pattern_body->get_type();
 	if (SEQUENTIAL_AND_LINK != btype and SEQUENTIAL_OR_LINK != btype)
 		return done;
 
@@ -131,7 +131,7 @@ bool SatisfyingSet::grounding(const HandleMap &var_soln,
 	{
 		vargnds.push_back(var_soln.at(hv));
 	}
-	_satisfying_set.emplace(Handle(createLink(vargnds, LIST_LINK)));
+	_satisfying_set.emplace(createLink(vargnds, LIST_LINK));
 
 	// If we found as many as we want, then stop looking for more.
 	return (_satisfying_set.size() >= max_results);
@@ -140,15 +140,6 @@ bool SatisfyingSet::grounding(const HandleMap &var_soln,
 TruthValuePtr opencog::satisfaction_link(AtomSpace* as, const Handle& hlink)
 {
 	PatternLinkPtr plp(PatternLinkCast(hlink));
-	if (NULL == plp)
-	{
-		// If it is a BindLink (for example), we want to use that ctor
-		// instead of the default ctor.
-		if (classserver().isA(hlink->getType(), SATISFACTION_LINK))
-			plp = createPatternLink(*LinkCast(hlink));
-		else
-			plp = createPatternLink(hlink);
-	}
 
 	Satisfier sater(as);
 	plp->satisfy(sater);
@@ -173,7 +164,7 @@ Handle opencog::satisfying_set(AtomSpace* as, const Handle& hlink, size_t max_re
 	// the C++ code for handling this case could maybe be refactored
 	// to handle BindLink as well as GetLink in one place... but right
 	// now, it doesn't.
-	Type blt = hlink->getType();
+	Type blt = hlink->get_type();
 	if (BIND_LINK == blt)
 	{
 		return bindlink(as, hlink, max_results);
@@ -189,10 +180,6 @@ Handle opencog::satisfying_set(AtomSpace* as, const Handle& hlink, size_t max_re
 			"Unexpected SatisfyingLink type!");
 
 	PatternLinkPtr bl(PatternLinkCast(hlink));
-	if (NULL == bl)
-	{
-		bl = createPatternLink(*LinkCast(hlink));
-	}
 
 	SatisfyingSet sater(as);
 	sater.max_results = max_results;
