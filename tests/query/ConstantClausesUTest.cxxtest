@@ -378,15 +378,16 @@ void ConstantClausesUTest::test_complex()
 }
 
 /**
- * When the pattern to be searched is a constant clause, the rewrite
- * term should not be triggered unless the constant term exists out
- * there in the atomspace apart from the rule.
+ * Constant clauses in a child atomspace are expected not to be accessible
+ * from the parent atomspace (so the rewrite term should not be triggered).
  */
 void ConstantClausesUTest::test_constant_pattern()
 {
-	Handle bl = al(BIND_LINK, al(INHERITANCE_LINK, A, C) , C),
-        result = bindlink(&as, bl),
-        expected = al(SET_LINK);
+    AtomSpace derived_as(&as);
+	Handle bl = derived_as.add_link(BIND_LINK,
+                                    derived_as.add_link(INHERITANCE_LINK, A, C) , C);
+    Handle result = bindlink(&as, bl),
+            expected = al(SET_LINK);
     TS_ASSERT_EQUALS(result, expected);
 }
 
