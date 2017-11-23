@@ -337,12 +337,9 @@ UnorderedHandleSet ForwardChainer::apply_rule(const Rule& rule)
 	}
 	// Search the whole atomspace.
 	else {
-        std::cout << "Rule to Evaluate with: \n" << rule.to_string();
 		AtomSpace derived_rule_as(&_as);
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
-        std::cout << "New Atomspace: \n" << derived_rule_as.to_string();
-		Handle h = bindlink(&_as, rhcpy);
-        std::cout << "PM result: \n" << h->to_string();
+		Handle h = bindlink(&derived_rule_as, rhcpy);
 		results = h->getOutgoingSet();
 	}
 

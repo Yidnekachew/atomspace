@@ -12,6 +12,8 @@
 
 (Member (Predicate "Not") involutary_functions)
 
+(define (return-value x) x)
+
 (define involution-rule
     (BindLink
 
@@ -24,22 +26,25 @@
         ;; If function f is one of the involutary functions, then f(f(x)) = x.
         (AndLink
             (Evaluation
-                (Variable "$f")
-                (Evaluation
+                 (Variable "$f")
+                 (Evaluation
                     (Variable "$f")
                     (Variable "$x")))
             (Member
-                (Variable "$f")
-                involutary_functions))
+                 (Variable "$f")
+                 involutary_functions))
 
-        (Variable "$x")
+        (ExecutionOutputLink
+	   	    (GroundedSchemaNode "scm: return-value")
+		      (Set (Variable "$x") (Variable "$f"))
+		    )
 ))
 
 (define involution-rule-name (DefinedSchema "involution-rule"))
 
 (Define involution-rule-name involution-rule)
 
-(define get-involuntaries
+(define get-involutaries
     (GetLink
         (AndLink
             (Evaluation

@@ -47,7 +47,7 @@ bool remove_constants(const HandleSet& vars,
                       const AtomSpace &queried_as);
 
 // check whether an Atom exists in a given atomspace.
-bool is_in_atomspace(const Handle& clause, const AtomSpace& atomspace);
+bool is_in_atomspace(const Handle& handle, const AtomSpace& atomspace);
 
 // Return true if the clause is constant
 bool is_constant(const HandleSet& vars, const Handle& clause);

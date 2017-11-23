@@ -25,7 +25,6 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include "PatternUtils.h"
 
-
 using namespace opencog;
 
 namespace opencog {
@@ -139,9 +138,9 @@ bool remove_constants(const HandleSet &vars,
 	return modified;
 }
 
-bool is_in_atomspace(const Handle& clause, const AtomSpace& atomspace)
+bool is_in_atomspace(const Handle& handle, const AtomSpace& atomspace)
 {
-	return atomspace.get_atom(clause) != Handle::UNDEFINED;
+	return atomspace.get_atom(handle) != Handle::UNDEFINED;
 }
 
 bool is_constant(const HandleSet& vars, const Handle& clause)
