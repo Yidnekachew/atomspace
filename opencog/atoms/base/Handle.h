@@ -180,7 +180,7 @@ typedef std::set<Handle> HandleSet;
 typedef std::unordered_set<Handle> UnorderedHandleSet;
 
 //! an ordered map from Handle to Handle set
-typedef std::map<Handle, UnorderedHandleSet> HandleMultimap;
+typedef std::map<Handle, HandleSet> HandleMultimap;
 
 //! an ordered map from Handle to Handle
 typedef std::map<Handle, Handle> HandleMap;
@@ -197,8 +197,14 @@ typedef std::vector<HandlePair> HandlePairSeq;
 //! a map from handle to double
 typedef Counter<Handle, double> HandleCounter;
 
+//! a map from handle to unsigned
+typedef Counter<Handle, unsigned> HandleUCounter;
+
 //! a handle iterator
 typedef std::iterator<std::forward_iterator_tag, Handle> HandleIterator;
+
+bool content_eq(const opencog::HandleSet& lhs,
+                const opencog::HandleSet& rhs);
 
 struct content_based_atom_ptr_less
 {

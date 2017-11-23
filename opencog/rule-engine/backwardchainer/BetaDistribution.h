@@ -42,17 +42,42 @@ public:
 	 * Construct a BetaDistribution given a TV and a beta-distribution
 	 * prior with parameters (alpha, beta).
 	 */
-	BetaDistribution(const TruthValuePtr& tv, double alpha=1.0, double beta=1.0);
-	BetaDistribution(double pos_count, double count, double alpha=1.0, double beta=1.0);
+	BetaDistribution(const TruthValuePtr& tv,
+	                 double prior_alpha=1.0, double prior_beta=1.0);
+	BetaDistribution(double pos_count, double count,
+	                 double prior_alpha=1.0, double prior_beta=1.0);
 
 	/**
-	 * Return the mean of the beta distribution
+	 * Return the alpha parameter of the distribution
+	 */
+	double alpha() const;
+
+	/**
+	 * Return the beta of the beta parameter of the distribution
+	 */
+	double beta() const;
+
+	/**
+	 * Return the mean of the distribution
 	 */
 	double mean() const;
 
 	/**
-	 * Calculate the cdf of a beta distribution, given the number of
-	 * bins for discretization.
+	 * Return the variance of the distribution
+	 */
+	double variance() const;
+
+	/**
+	 * Generate a vector of the cdf of regularly spaced right-end
+	 * points, specifically
+	 *
+	 * [beta_distribution_cdf(1/bins),
+	 *  beta_distribution_cdf(2/bins),
+	 *  ...
+	 *  beta_distribution_cdf(1)]
+	 *
+	 * The cdf at the origin is ignored because it is always 0. The
+	 * last one is always 1 but is included for completeness.
 	 */
 	std::vector<double> cdf(int bins) const;
 
@@ -61,9 +86,19 @@ public:
 	 */
 	double pd(double x) const;
 
+	std::string to_string() const;
+
 private:
 	boost::math::beta_distribution<double> _beta_distribution;
 };
+
+// Helpers
+BetaDistribution mk_beta_distribution(const TruthValuePtr& tv);
+
+TruthValuePtr mk_stv(double mean, double variance,
+                     double prior_alpha=1.0, double prior_beta=1.0);
+
+std::string oc_to_string(const BetaDistribution& bd);
 
 } // namespace opencog
 
