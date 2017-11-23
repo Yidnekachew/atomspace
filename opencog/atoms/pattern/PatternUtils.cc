@@ -22,7 +22,9 @@
  */
 
 #include <opencog/atomutils/FindUtils.h>
+#include <opencog/atomspace/AtomSpace.h>
 #include "PatternUtils.h"
+
 
 using namespace opencog;
 
@@ -60,7 +62,11 @@ namespace opencog {
  */
 bool remove_constants(const HandleSet &vars,
                       HandleSeq &clauses,
-                      HandleSeq &constants)
+                      HandleSeq &constants,
+                      HandleSeqSeq &components,
+                      HandleSeq &mandatory_clauses,
+                      HandleSeq &cnf_clauses,
+                      const AtomSpace &queried_as)
 {
 	bool modified = false;
 
@@ -69,10 +75,59 @@ bool remove_constants(const HandleSet &vars,
 	for (i = clauses.begin(); i != clauses.end(); )
 	{
 		Handle clause(*i);
-		if (is_constant(vars, clause))
+
+		if (is_constant(vars, clause) && is_in_atomspace(clause, queried_as))
 		{
 			constants.emplace_back(clause);
 			i = clauses.erase(i);
+
+			// remove the clause from _components too.
+			HandleSeqSeq::iterator j;
+			for(j = components.begin(); j != components.end(); )
+			{
+				HandleSeq seq(*j);
+
+				if(seq.at(0) == clause)
+				{
+					j = components.erase(j);
+				}
+				else
+				{
+					++j;
+				}
+			}
+
+			// remove the clause from _pattern_mandatory too.
+			HandleSeq::iterator it;
+			for(it = mandatory_clauses.begin(); it != mandatory_clauses.end(); )
+			{
+				Handle mandatory_clause(*it);
+
+				if(mandatory_clause == clause)
+				{
+					it = mandatory_clauses.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+			}
+
+			// remove the clause from _cnf_clauses too.
+			for(it = cnf_clauses.begin(); it != cnf_clauses.end(); )
+			{
+				Handle cnf_clause(*it);
+
+				if(cnf_clause == clause)
+				{
+					it = cnf_clauses.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+			}
+
 			modified = true;
 		}
 		else
@@ -82,6 +137,11 @@ bool remove_constants(const HandleSet &vars,
 	}
 
 	return modified;
+}
+
+bool is_in_atomspace(const Handle& clause, const AtomSpace& atomspace)
+{
+	return atomspace.get_atom(clause) != Handle::UNDEFINED;
 }
 
 bool is_constant(const HandleSet& vars, const Handle& clause)

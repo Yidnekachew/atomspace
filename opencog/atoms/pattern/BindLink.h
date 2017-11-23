@@ -52,7 +52,7 @@ public:
 	BindLink(const Handle& body, const Handle& rewrite);
 	explicit BindLink(const Link &l);
 
-	bool imply(PatternMatchCallback&, bool check_connectivity=true);
+	bool imply(PatternMatchCallback&, AtomSpace* atomspace, bool check_connectivity=true);
 	const Handle& get_implicand(void) { return _implicand; }
 
 	// Return the cached implication results

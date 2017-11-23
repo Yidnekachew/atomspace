@@ -384,9 +384,11 @@ void ConstantClausesUTest::test_complex()
 void ConstantClausesUTest::test_constant_pattern()
 {
 	AtomSpace derived_as(&as);
-	Handle bl = derived_as.add_link(
-			BIND_LINK, derived_as.add_link(INHERITANCE_LINK, A, C), C);
-	Handle result = bindlink(&as, bl),
+	Handle DA = derived_as.add_node(CONCEPT_NODE, "DA"),
+			DB = derived_as.add_node(CONCEPT_NODE, "DB"),
+			bl = derived_as.add_link(
+			BIND_LINK, derived_as.add_link(INHERITANCE_LINK, DA, DB), DB),
+			result = bindlink(&as, bl),
 			expected = al(SET_LINK);
 	TS_ASSERT_EQUALS(result, expected);
 }

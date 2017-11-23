@@ -332,14 +332,17 @@ UnorderedHandleSet ForwardChainer::apply_rule(const Rule& rule)
 		BindLinkPtr bl = BindLinkCast(rhcpy);
 		FocusSetPMCB fs_pmcb(&derived_rule_as, &_as);
 		fs_pmcb.implicand = bl->get_implicand();
-		bl->imply(fs_pmcb, false);
+		bl->imply(fs_pmcb, &derived_rule_as, false);
 		results = fs_pmcb.get_result_list();
 	}
 	// Search the whole atomspace.
 	else {
+        std::cout << "Rule to Evaluate with: \n" << rule.to_string();
 		AtomSpace derived_rule_as(&_as);
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
-		Handle h = bindlink(&derived_rule_as, rhcpy);
+        std::cout << "New Atomspace: \n" << derived_rule_as.to_string();
+		Handle h = bindlink(&_as, rhcpy);
+        std::cout << "PM result: \n" << h->to_string();
 		results = h->getOutgoingSet();
 	}
 
