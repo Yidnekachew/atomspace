@@ -2,7 +2,6 @@
 #include <opencog/rule-engine/backwardchainer/BackwardChainer.h>
 #include <opencog/rule-engine/forwardchainer/ForwardChainer.h>
 #include <opencog/guile/SchemeEval.h>
-#include <opencog/rule-engine/UREConfig.h>
 
 using namespace opencog;
 
@@ -37,8 +36,9 @@ int main(int argc, char** args)
 void backward_chain(AtomSpace& as)
 {
     SchemeEval *eval = SchemeEval::get_evaluator(&as);
-    eval->eval("(load-from-path \"scm/bc-criminal.scm\")");
-    eval->eval("(load-from-path \"scm/bc-config.scm\")");
+
+    eval->eval("(load \"scm/bc-criminal.scm\")");
+    eval->eval("(load \"scm/bc-config.scm\")");
     Handle target_var = eval->eval_h("(VariableNode \"$who\")");
     Handle target = eval->eval_h("(InheritanceLink"
                                 "   (VariableNode \"$who\")"
@@ -68,9 +68,9 @@ void backward_chain(AtomSpace& as)
 void forward_chain(AtomSpace& as)
 {
     SchemeEval *eval = SchemeEval::get_evaluator(&as);
-    eval->eval("(load-from-path \"scm/deduction.scm\")");
-    eval->eval("(load-from-path \"scm/fc-simple-assertions.scm\")");
-    eval->eval("(load-from-path \"scm/fc-config.scm\")");
+    eval->eval("(load \"scm/deduction.scm\")");
+    eval->eval("(load \"scm/fc-simple-assertions.scm\")");
+    eval->eval("(load \"scm/fc-config.scm\")");
 
     //Choose source atoms to apply forward chaining on.
     Handle source =
