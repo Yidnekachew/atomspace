@@ -80,18 +80,9 @@ bool remove_constants(const HandleSet &vars,
 			i = pat.clauses.erase(i);
 
 			// remove the clause from _components.
-			HandleSeqSeq::iterator j;
-			for (j = components.begin(); j != components.end();)
-			{
-				if (j->at(0) == clause)
-				{
-					j = components.erase(j);
-				}
-				else
-				{
-					++j;
-				}
-			}
+			auto j = boost::find(components, HandleSeq{clause});
+			if (j != components.end())
+				components.erase(j);
 
 			// remove the clause from _pattern_mandatory.
 			auto m = boost::find(pat.mandatory, clause);

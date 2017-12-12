@@ -53,7 +53,7 @@ public:
 	explicit BindLink(const Link &l);
 
 	bool imply(PatternMatchCallback&, AtomSpace* as,
-	           bool check_connectivity= false);
+	           bool check_connectivity=false);
 	const Handle& get_implicand(void) { return _implicand; }
 
 	// Return the cached implication results
@@ -68,7 +68,6 @@ static inline BindLinkPtr BindLinkCast(const Handle& h)
 static inline BindLinkPtr BindLinkCast(AtomPtr a)
 	{ return std::dynamic_pointer_cast<BindLink>(a); }
 
-// XXX temporary hack ...
 #define createBindLink std::make_shared<BindLink>
 
 /** @}*/
