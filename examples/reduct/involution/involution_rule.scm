@@ -36,8 +36,7 @@
 
         (ExecutionOutputLink
 	   	    (GroundedSchemaNode "scm: return-value")
-		      (Set (Variable "$x") (Variable "$f"))
-		    )
+                (Variable "$x"))
 ))
 
 (define involution-rule-name (DefinedSchema "involution-rule"))

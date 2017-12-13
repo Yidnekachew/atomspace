@@ -12,12 +12,12 @@
                 (Variable "$a")
         		(Variable "$b"))
         	(Member
-        		(Variable "$b")
-        		(Variable "$c")))
+        		(Variable "$c")
+        		(Variable "$d")))
 
         (ExecutionOutput
         	(GroundedSchemaNode "scm: return-value")
-        	(Set (Variable "$a") (Variable "$b") (Variable "$c")))))
+        	(Set (Variable "$a") (Variable "$b")))))
 
 (define rule-name (DefinedSchema "rule"))
 
