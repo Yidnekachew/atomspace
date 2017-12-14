@@ -8,6 +8,8 @@ void test_conditional_instantiation_1(AtomSpace &_as);
 
 void test_constant_pattern_2(AtomSpace& _as);
 
+void test_unsatisfied_premise(AtomSpace& _as);
+
 string load_from_path(const string& filename, AtomSpace& _as);
 
 #define an _as.add_node
@@ -47,7 +49,7 @@ int main(int argc, char** args)
 
 //    test_constant_pattern_2(as);
 
-    test_expand_1();
+	test_unsatisfied_premise(as);
 
     return 0;
 }
@@ -55,7 +57,7 @@ int main(int argc, char** args)
 string load_from_path(const string& filename, AtomSpace& _as)
 {
     SchemeEval *_eval = SchemeEval::get_evaluator(&_as);
-    return _eval->eval((string("(load-from-path \"") + filename + "\")").c_str());
+    return _eval->eval(string("(load-from-path \"") + filename + "\")");
 }
 
 void test_conditional_instantiation_1(AtomSpace &_as)
@@ -135,229 +137,28 @@ void test_constant_pattern_2(AtomSpace& _as)
 //    TS_ASSERT_EQUALS(result, expected);
 }
 
-void test_expand_1()
+void test_unsatisfied_premise(AtomSpace& _as)
 {
-    AndBIT andbit(_eval.eval_h("fcs-2"));
-    Handle leaf = _eval.eval_h("(LambdaLink"
-                                   "  (TypedVariableLink"
-                                   "    (VariableNode \"$X\")"
-                                   "    (TypeNode \"ConceptNode\"))"
-                                   "  (EvaluationLink"
-                                   "    (PredicateNode \"contain\")"
-                                   "    (ListLink"
-                                   "      (ConceptNode \"treatment-1\")"
-                                   "      (ConceptNode \"compound-A\"))))");
+	SchemeEval* _eval = SchemeEval::get_evaluator(&_as);
 
-    Rule closed_lambda_introduction_rule(closed_lambda_introduction_rule_h);
-    RuleTypedSubstitutionMap rules =
-        closed_lambda_introduction_rule.unify_target(leaf);
-    RuleTypedSubstitutionPair rule = *rules.begin();
+	string dir = string(PROJECT_SOURCE_DIR) + "/tests/rule-engine/backwardchainer";
+	_eval->eval(string("(add-to-load-path \"") + dir + string("\")"));
+	_eval->eval("(load-from-path \"fc-unsatisfied-premise.scm\")");
 
-    AndBIT result = andbit.expand(leaf, rule, 1);
-    AndBIT expected(
-        _eval.eval_h("(BindLink"
-                         "  (AndLink"
-                         "    (EvaluationLink"
-                         "      (GroundedPredicateNode \"scm: closed-lambda-introduction-precondition\")"
-                         "      (EvaluationLink (stv 1.000000 1.000000)"
-                         "        (PredicateNode \"contain\")"
-                         "        (ListLink"
-                         "          (ConceptNode \"treatment-1\")"
-                         "          (ConceptNode \"compound-A\"))))"
-                         "    (NotLink"
-                         "      (IdenticalLink"
-                         "        (LambdaLink"
-                         "          (TypedVariableLink"
-                         "            (VariableNode \"$X\")"
-                         "            (TypeNode \"ConceptNode\"))"
-                         "          (EvaluationLink"
-                         "            (PredicateNode \"take\")"
-                         "            (ListLink"
-                         "              (VariableNode \"$X\")"
-                         "              (ConceptNode \"treatment-1\"))))"
-                         "        (LambdaLink"
-                         "          (TypedVariableLink"
-                         "            (VariableNode \"$X\")"
-                         "            (TypeNode \"ConceptNode\"))"
-                         "          (AndLink"
-                         "            (EvaluationLink"
-                         "              (PredicateNode \"contain\")"
-                         "              (ListLink"
-                         "                (ConceptNode \"treatment-1\")"
-                         "                (ConceptNode \"compound-A\")))"
-                         "            (EvaluationLink"
-                         "              (PredicateNode \"take\")"
-                         "              (ListLink"
-                         "                (VariableNode \"$X\")"
-                         "                (ConceptNode \"treatment-1\")))))))"
-                         "    (NotLink"
-                         "      (EqualLink"
-                         "        (LambdaLink"
-                         "          (TypedVariableLink"
-                         "            (VariableNode \"$X\")"
-                         "            (TypeNode \"ConceptNode\"))"
-                         "          (EvaluationLink"
-                         "            (PredicateNode \"contain\")"
-                         "            (ListLink"
-                         "              (ConceptNode \"treatment-1\")"
-                         "              (ConceptNode \"compound-A\"))))"
-                         "        (LambdaLink"
-                         "          (TypedVariableLink"
-                         "            (VariableNode \"$X\")"
-                         "            (TypeNode \"ConceptNode\"))"
-                         "          (EvaluationLink"
-                         "            (PredicateNode \"take\")"
-                         "            (ListLink"
-                         "              (VariableNode \"$X\")"
-                         "              (ConceptNode \"treatment-1\")))))))"
-                         "  (ExecutionOutputLink"
-                         "    (GroundedSchemaNode \"scm: deduction-formula\")"
-                         "    (ListLink"
-                         "      (ImplicationLink"
-                         "        (LambdaLink"
-                         "          (TypedVariableLink"
-                         "            (VariableNode \"$X\")"
-                         "            (TypeNode \"ConceptNode\"))"
-                         "          (EvaluationLink"
-                         "            (PredicateNode \"take\")"
-                         "            (ListLink"
-                         "              (VariableNode \"$X\")"
-                         "              (ConceptNode \"treatment-1\"))))"
-                         "        (LambdaLink"
-                         "          (TypedVariableLink"
-                         "            (VariableNode \"$X\")"
-                         "            (TypeNode \"ConceptNode\"))"
-                         "          (AndLink"
-                         "            (EvaluationLink"
-                         "              (PredicateNode \"contain\")"
-                         "              (ListLink"
-                         "                (ConceptNode \"treatment-1\")"
-                         "                (ConceptNode \"compound-A\")))"
-                         "            (EvaluationLink"
-                         "              (PredicateNode \"take\")"
-                         "              (ListLink"
-                         "                (VariableNode \"$X\")"
-                         "                (ConceptNode \"treatment-1\"))))))"
-                         "      (ExecutionOutputLink"
-                         "        (GroundedSchemaNode \"scm: implication-implicant-distribution-formula\")"
-                         "        (ListLink"
-                         "          (ImplicationLink"
-                         "            (LambdaLink"
-                         "              (TypedVariableLink"
-                         "                (VariableNode \"$X\")"
-                         "                (TypeNode \"ConceptNode\"))"
-                         "              (EvaluationLink"
-                         "                (PredicateNode \"take\")"
-                         "                (ListLink"
-                         "                  (VariableNode \"$X\")"
-                         "                  (ConceptNode \"treatment-1\"))))"
-                         "            (AndLink"
-                         "              (LambdaLink"
-                         "                (TypedVariableLink"
-                         "                  (VariableNode \"$X\")"
-                         "                  (TypeNode \"ConceptNode\"))"
-                         "                (EvaluationLink"
-                         "                  (PredicateNode \"take\")"
-                         "                  (ListLink"
-                         "                    (VariableNode \"$X\")"
-                         "                    (ConceptNode \"treatment-1\"))))"
-                         "              (LambdaLink"
-                         "                (TypedVariableLink"
-                         "                  (VariableNode \"$X\")"
-                         "                  (TypeNode \"ConceptNode\"))"
-                         "                (EvaluationLink"
-                         "                  (PredicateNode \"contain\")"
-                         "                  (ListLink"
-                         "                    (ConceptNode \"treatment-1\")"
-                         "                    (ConceptNode \"compound-A\"))))))"
-                         "          (ExecutionOutputLink"
-                         "            (GroundedSchemaNode \"scm: implication-introduction-formula\")"
-                         "            (ListLink"
-                         "              (ImplicationLink"
-                         "                (LambdaLink"
-                         "                  (TypedVariableLink"
-                         "                    (VariableNode \"$X\")"
-                         "                    (TypeNode \"ConceptNode\"))"
-                         "                  (EvaluationLink"
-                         "                    (PredicateNode \"take\")"
-                         "                    (ListLink"
-                         "                      (VariableNode \"$X\")"
-                         "                      (ConceptNode \"treatment-1\"))))"
-                         "                (LambdaLink"
-                         "                  (TypedVariableLink"
-                         "                    (VariableNode \"$X\")"
-                         "                    (TypeNode \"ConceptNode\"))"
-                         "                  (EvaluationLink"
-                         "                    (PredicateNode \"contain\")"
-                         "                    (ListLink"
-                         "                      (ConceptNode \"treatment-1\")"
-                         "                      (ConceptNode \"compound-A\")))))"
-                         "              (LambdaLink"
-                         "                (TypedVariableLink"
-                         "                  (VariableNode \"$X\")"
-                         "                  (TypeNode \"ConceptNode\"))"
-                         "                (EvaluationLink"
-                         "                  (PredicateNode \"take\")"
-                         "                  (ListLink"
-                         "                    (VariableNode \"$X\")"
-                         "                    (ConceptNode \"treatment-1\"))))"
-                         "              (ExecutionOutputLink"
-                         "                (GroundedSchemaNode \"scm: closed-lambda-introduction-formula\")"
-                         "                (ListLink"
-                         "                  (LambdaLink"
-                         "                    (TypedVariableLink"
-                         "                      (VariableNode \"$X\")"
-                         "                      (TypeNode \"ConceptNode\"))"
-                         "                    (EvaluationLink"
-                         "                      (PredicateNode \"contain\")"
-                         "                      (ListLink"
-                         "                        (ConceptNode \"treatment-1\")"
-                         "                        (ConceptNode \"compound-A\"))))"
-                         "                  (EvaluationLink"
-                         "                    (PredicateNode \"contain\")"
-                         "                    (ListLink"
-                         "                      (ConceptNode \"treatment-1\")"
-                         "                      (ConceptNode \"compound-A\")))))))))"
-                         "      (ExecutionOutputLink"
-                         "        (GroundedSchemaNode \"scm: implication-and-lambda-factorization-formula\")"
-                         "        (ImplicationLink"
-                         "          (AndLink"
-                         "            (LambdaLink"
-                         "              (TypedVariableLink"
-                         "                (VariableNode \"$X\")"
-                         "                (TypeNode \"ConceptNode\"))"
-                         "              (EvaluationLink"
-                         "                (PredicateNode \"take\")"
-                         "                (ListLink"
-                         "                  (VariableNode \"$X\")"
-                         "                  (ConceptNode \"treatment-1\"))))"
-                         "            (LambdaLink"
-                         "              (TypedVariableLink"
-                         "                (VariableNode \"$X\")"
-                         "                (TypeNode \"ConceptNode\"))"
-                         "              (EvaluationLink"
-                         "                (PredicateNode \"contain\")"
-                         "                (ListLink"
-                         "                  (ConceptNode \"treatment-1\")"
-                         "                  (ConceptNode \"compound-A\")))))"
-                         "          (LambdaLink"
-                         "            (TypedVariableLink"
-                         "              (VariableNode \"$X\")"
-                         "              (TypeNode \"ConceptNode\"))"
-                         "            (AndLink"
-                         "              (EvaluationLink"
-                         "                (PredicateNode \"contain\")"
-                         "                (ListLink"
-                         "                  (ConceptNode \"treatment-1\")"
-                         "                  (ConceptNode \"compound-A\")))"
-                         "              (EvaluationLink"
-                         "                (PredicateNode \"take\")"
-                         "                (ListLink"
-                         "                  (VariableNode \"$X\")"
-                         "                  (ConceptNode \"treatment-1\"))))))))))"));
+	Handle expected = al(SET_LINK ),
+		table = an(CONCEPT_NODE, "table"),
+		furniture = an(CONCEPT_NODE, "furniture"),
+		source = al(INHERITANCE_LINK, table, furniture),
+		vardecl = Handle::UNDEFINED,
+		top_rbs = _as.get_node(CONCEPT_NODE, "rule-base");
 
-    logger().debug() << "result = " << oc_to_string(result);
-    logger().debug() << "expected = " << oc_to_string(expected);
+    ForwardChainer fc(_as, top_rbs, table, vardecl);
+    fc.get_config().set_maximum_iterations(20);
+    fc.do_chain();
 
-    TS_ASSERT_EQUALS(result, expected);
+    UnorderedHandleSet results = fc.get_chaining_result();
+
+	results.find(expected);
+
+	std::cout << "results " << oc_to_string(results);
 }

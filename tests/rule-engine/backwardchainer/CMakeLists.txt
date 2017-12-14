@@ -9,3 +9,5 @@ ADD_CXXTEST(BackwardChainerUTest)
 ADD_CXXTEST(ActionSelectionUTest)
 ADD_CXXTEST(ControlPolicyUTest)
 ADD_CXXTEST(BITUTest)
+
+ADD_EXECUTABLE(bwchainerExample bwchainerExample)
