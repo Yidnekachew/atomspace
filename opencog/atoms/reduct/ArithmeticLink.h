@@ -23,7 +23,6 @@
 #ifndef _OPENCOG_ARITHMETIC_LINK_H
 #define _OPENCOG_ARITHMETIC_LINK_H
 
-#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/reduct/FoldLink.h>
 
 namespace opencog
@@ -33,27 +32,24 @@ namespace opencog
  */
 
 /**
- * The ArithmeticLink implements the arithmetic operations of plus
- * and times. It uses FoldLink to perform reduction.
+ * The ArithmeticLink implements the simple arithmetic operations.
+ * It uses FoldLink to perform delta-reduction.
  */
 class ArithmeticLink : public FoldLink
 {
 protected:
-	double knild;
-	virtual double konsd(double, double) const = 0;
-
 	void init(void);
 	ArithmeticLink(Type, const Handle& a, const Handle& b);
 
-	NumberNodePtr unwrap_set(Handle) const;
-	virtual Handle do_execute(AtomSpace*, const HandleSeq&) const;
+	virtual Handle reorder(void) const;
+	bool _commutative;
+
 public:
 	ArithmeticLink(const HandleSeq& oset, Type=ARITHMETIC_LINK);
 	ArithmeticLink(const Link& l);
 
-	virtual Handle reorder(void);
-   virtual Handle reduce(void);
-	virtual Handle execute(AtomSpace* as) const;
+	virtual Handle delta_reduce(void) const;
+	virtual Handle execute() const;
 };
 
 typedef std::shared_ptr<ArithmeticLink> ArithmeticLinkPtr;

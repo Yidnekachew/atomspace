@@ -153,7 +153,8 @@ void ForwardChainerUTest::test_select_rule(void)
 }
 
 /**
- * ForwardChainer shouldn't return a result when there is unsatisfied premise.
+ * ForwardChainer shouldn't return a result when there is
+ * unsatisfied premise.
  */
 void ForwardChainerUTest::test_unsatisfied_premise(void)
 {
@@ -170,7 +171,7 @@ void ForwardChainerUTest::test_unsatisfied_premise(void)
 	fc.do_chain();
 
 	UnorderedHandleSet results = fc.get_chaining_result();
-    TS_ASSERT_EQUALS(results.size(), 0);
+	TS_ASSERT_EQUALS(results.size(), 0);
 }
 
 #undef al

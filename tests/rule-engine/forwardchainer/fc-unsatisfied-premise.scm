@@ -1,29 +1,23 @@
-(use-modules (opencog rule-engine))
-(use-modules (opencog query))
-(use-modules (opencog exec))
-
 (define (return-value x) x)
 
 (define rule
-    (BindLink
+ (BindLink
 
-        (VariableList
-         (TypedVariable (Variable "$a") (Type "ConceptNode"))
-         (TypedVariable (Variable "$b") (Type "ConceptNode"))
-         (TypedVariable (Variable "$c") (Type "ConceptNode"))
-         (TypedVariable (Variable "$d") (Type "ConceptNode")))
+  (VariableList
+   (TypedVariable (Variable "$a") (Type "ConceptNode"))
+   (TypedVariable (Variable "$b") (Type "ConceptNode")))
 
-        (And
-            (Inheritance
-                (Variable "$a")
-        		(Variable "$b"))
-        	(Member
-        		(Variable "$c")
-        		(Variable "$d")))
+  (And
+   (Inheritance
+    (Variable "$a")
+    (Variable "$b"))
+   (Member
+    (Variable "$a")
+    (Variable "$b")))
 
-        (ExecutionOutput
-        	(GroundedSchemaNode "scm: return-value")
-        	(Set (Variable "$a") (Variable "$b")))))
+  (ExecutionOutput
+   (GroundedSchemaNode "scm: return-value")
+   (Set (Variable "$a") (Variable "$b")))))
 
 (define rule-name (DefinedSchema "rule"))
 
@@ -31,13 +25,6 @@
 
 (define rule-base (Concept "rule-base"))
 
-(Inheritance
-    rule-base
-    (Concept "URE"))
+(Inheritance rule-base (Concept "URE"))
 
-(define rules
-    (list
-        rule-name
-    ))
-
-(ure-add-rules rule-base rules)
+(ure-add-rule rule-base rule-name)

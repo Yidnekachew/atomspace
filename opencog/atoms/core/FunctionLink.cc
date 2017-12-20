@@ -26,6 +26,12 @@
 
 using namespace opencog;
 
+void FunctionLink::check_type(Type t)
+{
+	if (not classserver().isA(t, FUNCTION_LINK))
+		throw InvalidParamException(TRACE_INFO, "Expecting a FunctionLink");
+}
+
 void FunctionLink::init(void)
 {
 	FreeLink::init();
@@ -34,60 +40,35 @@ void FunctionLink::init(void)
 FunctionLink::FunctionLink(const HandleSeq& oset, Type t)
     : FreeLink(oset, t)
 {
-	if (not classserver().isA(t, FUNCTION_LINK))
-		throw InvalidParamException(TRACE_INFO, "Expecting a FunctionLink");
+	check_type(t);
 	init();
 }
 
 FunctionLink::FunctionLink(Type t, const Handle& a)
     : FreeLink(t, a)
 {
-	if (not classserver().isA(t, FUNCTION_LINK))
-		throw InvalidParamException(TRACE_INFO, "Expecting a FunctionLink");
+	check_type(t);
 	init();
 }
 
 FunctionLink::FunctionLink(Type t, const Handle& a, const Handle& b)
     : FreeLink({a, b}, t)
 {
-	if (not classserver().isA(t, FUNCTION_LINK))
-		throw InvalidParamException(TRACE_INFO, "Expecting a FunctionLink");
+	check_type(t);
 	init();
 }
 
 FunctionLink::FunctionLink(const Link& l)
     : FreeLink(l)
 {
-	Type tscope = l.get_type();
-	if (not classserver().isA(tscope, FUNCTION_LINK))
-		throw InvalidParamException(TRACE_INFO, "Expecting a FunctionLink");
+	check_type(l.get_type());
 	init();
 }
 
-Handle FunctionLink::execute(AtomSpace* as) const
+Handle FunctionLink::execute() const
 {
 	throw RuntimeException(TRACE_INFO, "Not executable: %s\n",
 		classserver().getTypeName(get_type()).c_str());
-}
-
-Handle FunctionLink::do_execute(AtomSpace* as, const Handle& h)
-{
-	FunctionLinkPtr flp(castfactory(h));
-	return flp->execute(as);
-}
-
-FunctionLinkPtr FunctionLink::castfactory(const Handle& h)
-{
-	// If h is of the right form already, its just a matter of calling
-	// it.  Otherwise, we have to create
-	FunctionLinkPtr flp(FunctionLinkCast(h));
-	if (flp) return flp;
-
-	if (nullptr == h)
-		throw RuntimeException(TRACE_INFO, "Not executable!");
-
-	auto fact = classserver().getFactory(h->get_type());
-	return FunctionLinkCast((*fact)(h));
 }
 
 DEFINE_LINK_FACTORY(FunctionLink, FUNCTION_LINK);

@@ -118,7 +118,8 @@ void FreeVariables::find_variables(const Handle& h)
 HandleSeq FreeVariables::make_values(const HandleMap& varmap) const
 {
 	HandleSeq values;
-	for (const Handle& var : varseq) {
+	for (const Handle& var : varseq)
+	{
 		HandleMap::const_iterator it = varmap.find(var);
 		values.push_back(it == varmap.end() ? var : it->second);
 	}
@@ -155,6 +156,13 @@ Handle FreeVariables::substitute_nocheck(const Handle& term,
                                          bool silent) const
 {
 	return substitute_scoped(term, args, silent, index, 0);
+}
+
+Handle FreeVariables::substitute_nocheck(const Handle& term,
+                                         const HandleMap& vm,
+                                         bool silent) const
+{
+	return substitute_scoped(term, make_values(vm), silent, index, 0);
 }
 
 /// Perform beta-reduction on the term.  This is more-or-less a purely
@@ -692,6 +700,16 @@ bool Variables::operator<(const Variables& other) const
 		     and _deep_typemap < other._deep_typemap)
 		    or (_deep_typemap == other._deep_typemap
 		        and _fuzzy_typemap < other._fuzzy_typemap));
+}
+
+std::size_t FreeVariables::size() const
+{
+	return varseq.size();
+}
+
+bool FreeVariables::empty() const
+{
+	return varseq.empty();
 }
 
 Handle Variables::get_vardecl() const

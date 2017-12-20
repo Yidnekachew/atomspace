@@ -4,6 +4,7 @@ INCLUDE_DIRECTORIES( ${CMAKE_CURRENT_BINARY_DIR})
 
 ADD_LIBRARY (atomcore
 	ArityLink.cc
+	ComposeLink.cc
 	Context.cc
 	DefineLink.cc
 	DeleteLink.cc
@@ -17,6 +18,7 @@ ADD_LIBRARY (atomcore
 	Quotation.cc
 	RandomChoice.cc
 	RandomNumber.cc
+	RewriteLink.cc
 	ScopeLink.cc
 	SleepLink.cc
 	StateLink.cc
@@ -33,6 +35,7 @@ ADD_LIBRARY (atomcore
 ADD_DEPENDENCIES(atomcore opencog_atom_types)
 
 TARGET_LINK_LIBRARIES(atomcore
+	atomutils
 	atombase
 	${COGUTIL_LIBRARY}
 )
@@ -43,6 +46,7 @@ INSTALL (TARGETS atomcore
 
 INSTALL (FILES
 	ArityLink.h
+	ComposeLink.h
 	Context.h
 	DefineLink.h
 	DeleteLink.h
@@ -55,6 +59,7 @@ INSTALL (FILES
 	Quotation.h
 	RandomChoice.h
 	RandomNumber.h
+	RewriteLink.h
 	ScopeLink.h
 	SleepLink.h
 	StateLink.h

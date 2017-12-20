@@ -234,7 +234,7 @@ static bool type_match_rec(const Handle& left_, const Handle& right_, bool tople
 			return true;
 		}
 
-		// Does one of the left choices atch a right? Is so then good.
+		// Does one of the left choices match a right? Is so then good.
 		for (const Handle& lh : left->getOutgoingSet())
 		{
 			if (type_match_rec(lh, right, false)) return true;
@@ -408,6 +408,11 @@ VariableListPtr gen_varlist(const Handle& h, const Handle& vardecl)
 	OC_ASSERT(vardecl_t == VARIABLE_NODE
 	          or vardecl_t == TYPED_VARIABLE_LINK);
 	return createVariableList(vardecl);
+}
+
+Variables gen_variables(const Handle& h, const Handle& vardecl)
+{
+	return gen_varlist(h, vardecl)->get_variables();
 }
 
 Handle gen_vardecl(const Handle& h, const Handle& vardecl)

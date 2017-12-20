@@ -26,6 +26,7 @@
 #include <opencog/atoms/core/PutLink.h>
 #include <opencog/atoms/execution/ExecutionOutputLink.h>
 #include <opencog/atoms/execution/EvaluationLink.h>
+#include <opencog/atoms/execution/MapLink.h>
 #include <opencog/atoms/reduct/FoldLink.h>
 #include <opencog/query/BindLinkAPI.h>
 
@@ -41,10 +42,9 @@ using namespace opencog;
 /// have to actually be VariableNode's; they can be any atom.)
 static Handle beta_reduce(const Handle& expr, const HandleMap vmap)
 {
-	// XXX crud.  Stupid inefficient format conversion. FIXME.
-	// FreeVariables::substitute_nocheck() performs beta-reduction
-	// correctly, so we just use that. But it takes a specific
-	// format, and a variable-value map is not one of them.
+	// Format conversion. FreeVariables::substitute_nocheck() performs
+	// beta-reduction correctly, so we just use that. But we have to
+	// jam the map into the format it expects.
 	HandleSeq vals;
 	FreeVariables crud;
 	unsigned int idx = 0;
@@ -172,9 +172,9 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 	//    Eager: first, execute the arguments to the Put, then beta-
 	//    reduce, then execute again.
 	//
-	//    Lazy: beta-reduce first, then execute.  Lazy helps avoid
-	//    un-needed executions, and has better control over infinite
-	//    recursion. However, unit tests currently fail on it.
+	//    Lazy: beta-reduce first, then execute.  Lazy can sometimes
+	//    avoid un-needed executions, although it can sometimes lead to
+	//    more of them. Lazy has better control over infinite recursion.
 	//
 	if (PUT_LINK == t)
 	{
@@ -241,8 +241,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 		return rex;
 	}
 
-	// ExecutionOutputLinks are not handled by the FunctionLink factory
-	// below. This is due to a circular shared-libarary dependency.
+	// ExecutionOutputLinks get special treatment.
 	//
 	// Even for the case of lazy execution, we still have to do eager
 	// execution of the arguments passed to the ExOutLink.  This is
@@ -330,28 +329,19 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 		return Handle::UNDEFINED;
 	}
 
-	// FoldLink's are a kind-of FunctionLink, but are not currently
-	// handled by the FunctionLink factory below.  This should be fixed
-	// someday, when the reduct directory is nuked.
-	if (classserver().isA(t, FOLD_LINK))
+	if (MAP_LINK == t)
 	{
-		// A FoldLink never has a variable declaration (at this time).
-		// The number of arguments is never fixed, its always variadic.
 		if (_eager)
 		{
-			// Perform substitution on all arguments before applying the
-			// function itself.
 			HandleSeq oset_results;
 			walk_sequence(oset_results, expr->getOutgoingSet(), silent);
-			Handle fh(createLink(oset_results, t));
-			FoldLinkPtr flp(FoldLinkCast(fh));
-			return flp->execute(_as);
+			MapLinkPtr mlp(MapLinkCast(createLink(oset_results, t)));
+			return mlp->execute(_as);
 		}
 		else
 		{
-			Handle hexpr(beta_reduce(expr, *_vmap));
-			FoldLinkPtr flp(FoldLinkCast(hexpr));
-			return flp->execute(_as);
+			MapLinkPtr mlp(MapLinkCast(expr));
+			return mlp->execute(_as);
 		}
 	}
 
@@ -373,7 +363,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 			walk_sequence(oset_results, expr->getOutgoingSet(), silent);
 
 			FunctionLinkPtr flp(FunctionLinkCast(createLink(oset_results, t)));
-			return flp->execute(_as);
+			return flp->execute();
 		}
 		else
 		{
@@ -383,7 +373,7 @@ Handle Instantiator::walk_tree(const Handle& expr, bool silent)
 			// Perform substitution on all arguments before applying the
 			// function itself.
 			FunctionLinkPtr flp(FunctionLinkCast(expr));
-			return flp->execute(_as);
+			return flp->execute();
 		}
 	}
 
@@ -435,7 +425,7 @@ mere_recursive_call:
 	{
 		Handle subl(createLink(oset_results, t));
 		subl->copyValues(expr);
-		return _as->add_atom(subl);
+		return subl;
 	}
 	return expr;
 }

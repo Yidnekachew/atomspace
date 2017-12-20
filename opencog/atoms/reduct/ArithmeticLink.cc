@@ -51,29 +51,50 @@ void ArithmeticLink::init(void)
 {
 	Type tscope = get_type();
 	if (not classserver().isA(tscope, ARITHMETIC_LINK))
-		throw InvalidParamException(TRACE_INFO, "Expecting a ArithmeticLink");
+		throw InvalidParamException(TRACE_INFO, "Expecting an ArithmeticLink");
 
-	knild = std::numeric_limits<double>::quiet_NaN();
+	_commutative = false;
 }
 
 // ===========================================================
-/// reduce() -- reduce the expression by summing constants, etc.
+/// delta_reduce() -- delta-reduce the expression by summing constants, etc.
+///
+/// Recall the defintion of delta-reduction: it is the replacement of
+/// functions with values by the value that the function would have.
+/// For example, the delta-reduction of 2+2 is 4.
 ///
 /// No actual black-box evaluation or execution is performed. Only
 /// clearbox reductions are performed.
 ///
-/// Examples: the reduct of (PlusLink (NumberNode 2) (NumberNode 2))
-/// is (NumberNode 4) -- its just a constant.
+/// Examples: the delta-reduction of (FoldLink (Number 2) (Number 2))
+/// is (Number 4) -- its just a constant.
 ///
-/// The reduct of (PlusLink (VariableNode "$x") (NumberNode 0)) is
-/// (VariableNode "$x"), because adding zero to anything yeilds the
+/// The delta-reduct of (FoldLink (VariableNode "$x") (NumberNode 0))
+/// is (VariableNode "$x"), because adding zero to anything yeilds the
 /// thing itself.
-Handle ArithmeticLink::reduce(void)
+///
+/// This is certainly not an efficient, effective way to build a
+/// computer algebra system.  It works, its just barely good enough
+/// for single-variable arithmetic, but that's all.  For general
+/// reduction tasks, there are two choices:
+///
+/// A) Convert atoms to some other CAS format, reduce that, and then
+///    convert back to atoms.
+///
+/// B) Implement reduction with the Rule Engine, together with a set
+///    of reduction rules for arithmetic.
+///
+/// In some sense B) is better, but is likely to have poorer performance
+/// than A).  It also threatens to spiral out of control: We can add
+/// ever-more rules to the rule engine to reduce ever-more interesting
+/// algebraic expressions.
+///
+Handle ArithmeticLink::delta_reduce(void) const
 {
 	Handle road(reorder());
 	ArithmeticLinkPtr alp(ArithmeticLinkCast(road));
 
-	Handle red(alp->FoldLink::reduce());
+	Handle red(alp->FoldLink::delta_reduce());
 
 	alp = ArithmeticLinkCast(red);
 	if (NULL == alp) return red;
@@ -92,19 +113,38 @@ Handle ArithmeticLink::reduce(void)
 /// last, all number nodes
 /// We do not currently sort the variables, but maybe we should...?
 /// Sorting by variable names would hold consilidate them...
-/// The FoldLink::reduce() method already returns expressions that are
+/// The FoldLink::delta_reduce() method already returns expressions that are
 /// almost in the correct order.
-Handle ArithmeticLink::reorder(void)
+Handle ArithmeticLink::reorder(void) const
 {
+	if (not _commutative) return get_handle();
+
 	HandleSeq vars;
 	HandleSeq exprs;
 	HandleSeq numbers;
 
 	for (const Handle& h : _outgoing)
 	{
-		if (h->get_type() == VARIABLE_NODE)
+		Type htype = h->get_type();
+
+		// Hack for pattern matcher, which returns SetLinks of stuff.
+		// Recurse exacly once.
+		if (SET_LINK == htype)
+		{
+			for (const Handle& he : h->getOutgoingSet())
+			{
+				Type het = he->get_type();
+				if (VARIABLE_NODE == het)
+					vars.push_back(he);
+				else if (NUMBER_NODE == het)
+					numbers.push_back(he);
+				else
+					exprs.push_back(he);
+			}
+		}
+		else if (VARIABLE_NODE == htype)
 			vars.push_back(h);
-		else if (h->get_type() == NUMBER_NODE)
+		else if (NUMBER_NODE == htype)
 			numbers.push_back(h);
 		else
 			exprs.push_back(h);
@@ -115,87 +155,14 @@ Handle ArithmeticLink::reorder(void)
 	for (const Handle& h : exprs) result.push_back(h);
 	for (const Handle& h : numbers) result.push_back(h);
 
-	Handle h(createLink(result, get_type()));
-	if (NULL == _atom_space) return h;
-
-	return _atom_space->add_atom(h);
+	return Handle(createLink(result, get_type()));
 }
 
 // ===========================================================
-
-/// execute() -- Execute the expression, returning a number
-///
-/// Similar to reduce(), above, except that this can only work
-/// on fully grounded (closed) sentences: after executation,
-/// everything must be a number, and there can be no variables
-/// in sight.
-static inline double get_double(AtomSpace *as, Handle h)
+/// execute() -- Execute the expression
+Handle ArithmeticLink::execute() const
 {
-	NumberNodePtr nnn(NumberNodeCast(h));
-	if (nnn == nullptr)
-		throw RuntimeException(TRACE_INFO,
-			  "Expecting a NumberNode, got %s",
-		     classserver().getTypeName(h->get_type()).c_str());
-
-	return nnn->get_value();
-}
-
-NumberNodePtr ArithmeticLink::unwrap_set(Handle h) const
-{
-	FunctionLinkPtr flp(FunctionLinkCast(h));
-	if (flp) h = flp->execute();
-
-	// Pattern matching hack. The pattern matcher returns sets of atoms;
-	// if that set contains numbers or something numeric, then unwrap it.
-	if (SET_LINK == h->get_type())
-	{
-		if (1 != h->get_arity())
-			throw SyntaxException(TRACE_INFO,
-				"Don't know how to do arithmetic with this: %s",
-				h->to_string().c_str());
-		h = h->getOutgoingAtom(0);
-	}
-
-	NumberNodePtr na(NumberNodeCast(h));
-	if (nullptr == na)
-		throw SyntaxException(TRACE_INFO,
-			"Don't know how to do arithmetic with this: %s",
-			h->to_string().c_str());
-	return na;
-}
-
-Handle ArithmeticLink::execute(AtomSpace* as) const
-{
-	// Pattern matching hack. The pattern matcher returns sets of atoms;
-	// if that set contains numbers or something numeric, then unwrap it.
-	if (1 == _outgoing.size())
-	{
-		Handle arg = _outgoing[0];
-		FunctionLinkPtr flp(FunctionLinkCast(arg));
-		if (flp) arg = flp->execute(as);
-
-		if (SET_LINK == arg->get_type())
-		{
-			return do_execute(as, arg->getOutgoingSet());
-		}
-		HandleSeq o;
-		o.emplace_back(arg);
-		return do_execute(as, o);
-	}
-	return do_execute(as, _outgoing);
-}
-
-Handle ArithmeticLink::do_execute(AtomSpace* as, const HandleSeq& oset) const
-{
-	double sum = knild;
-	for (Handle h: oset)
-	{
-		h = unwrap_set(h);
-		sum = konsd(sum, get_double(as, h));
-	}
-
-	if (as) return as->add_atom(createNumberNode(sum));
-	return Handle(createNumberNode(sum));
+	return delta_reduce();
 }
 
 // ===========================================================

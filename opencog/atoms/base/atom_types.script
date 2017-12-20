@@ -242,13 +242,11 @@ DEFINE_LINK <- UNIQUE_LINK
 // necessarily list ALL the (free) variables within it; the ScopeLink
 // need not bind all of them.  The FreeLink also has no type
 // restrictions on the variables.
-//
-// The ScopeLink differs from a LambdaLink in that it does NOT allow
-// beta-reduction; only LambdaLinks can be beta-reduced. Thus,
-// ScopeLink can be used as a base class for things like ForAllLink,
-// ExistsLink and AverageLink, which bind variables, but are not
-// beta-reducible.
 SCOPE_LINK <- ORDERED_LINK
+
+// The RewriteLink is a ScopeLink with a large number of methods
+// that perform various different kinds of re-writing on the ScopeLink.
+REWRITE_LINK <- SCOPE_LINK
 
 // A LambdaLink is a link whose bound variables may be substituted,
 // that is, may be beta-reduced. It can be thought of as not only a
@@ -256,11 +254,18 @@ SCOPE_LINK <- ORDERED_LINK
 // the ability to substitute values for those variables.  This is
 // exactly the standard definition from lambda calc/functional
 // programming: an anonymous function declaration.
-LAMBDA_LINK <- SCOPE_LINK
+LAMBDA_LINK <- REWRITE_LINK
 
 // PutLinks perform a beta-reduction when executed; i.e. they get
-// beta-reduced when they are executed.
+// beta-reduced when they are executed. PutLinks are the same thing as
+// beta-redexes.
 PUT_LINK <- SCOPE_LINK
+
+// The PrenexLink is a ScopeLink that is in prenex normal form.  It
+// serves as a base class for the various pattern-matching links, since
+// pattern matching only makes sense when the patterns are written in
+// prenex normal form.
+PRENEX_LINK <- REWRITE_LINK
 
 // Pattern definition, pattern grounding/satisfaction.
 // The PatternLink implements the base class holding a pattern that
@@ -268,7 +273,7 @@ PUT_LINK <- SCOPE_LINK
 // enable a C++ class that unpacks all the arguments and types, etc.
 // into assorted C++ structures. It does not have any semantics in and
 // of itself, it just holds machinery.
-PATTERN_LINK <- SCOPE_LINK         // A pattern encapsulated in a Link.
+PATTERN_LINK <- PRENEX_LINK         // A pattern encapsulated in a Link.
 
 // We subdivide patterns into two types: one type returns a TV when it
 // is evaluated.  The other type returns a set of atoms when it is
@@ -520,9 +525,9 @@ EXECUTION_OUTPUT_LINK <- FUNCTION_LINK
 FOLD_LINK <- FUNCTION_LINK
 ARITHMETIC_LINK <- FOLD_LINK
 PLUS_LINK <- ARITHMETIC_LINK
-MINUS_LINK <- PLUS_LINK
+MINUS_LINK <- ARITHMETIC_LINK
 TIMES_LINK <- ARITHMETIC_LINK
-DIVIDE_LINK <- TIMES_LINK
+DIVIDE_LINK <- ARITHMETIC_LINK
 
 RANDOM_NUMBER_LINK <- FUNCTION_LINK
 
@@ -544,6 +549,17 @@ SLEEP_LINK <- FUNCTION_LINK
 // list, instead of the entire AtomSpace.  It is more-or-less analogous
 // to the standard functional-programming concept of "map".
 MAP_LINK <- FUNCTION_LINK
+
+// Higher order function. Take an n-ary function g as first outgoing,
+// a ListLink of n m-ary functions f1 to fn, as second outgoing, and
+// produce the m-ary function g(f1(x1,...,xm),...,fn(x1,...,xm)). If g
+// is unary, then the second outgoing can be function instead of a
+// ListLink.
+COMPOSE_LINK <- FUNCTION_LINK
+
+// Unary higher order function to build a projection function. Take a
+// number and build a function projecting its ith input argument.
+PROJECT_LINK <- FUNCTION_LINK
 
 // ====================================================================
 // Grammatical inference on time series

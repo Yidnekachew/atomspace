@@ -23,7 +23,6 @@
 #ifndef _OPENCOG_TIMES_LINK_H
 #define _OPENCOG_TIMES_LINK_H
 
-#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/reduct/ArithmeticLink.h>
 
 namespace opencog
@@ -38,8 +37,7 @@ namespace opencog
 class TimesLink : public ArithmeticLink
 {
 protected:
-	double konsd(double, double) const;
-	Handle kons(const Handle&, const Handle&);
+	Handle kons(const Handle&, const Handle&) const;
 
 	void init(void);
 	TimesLink(Type, const Handle& a, const Handle& b);

@@ -10,12 +10,14 @@ IF(HAVE_GUILE)
 	TARGET_LINK_LIBRARIES(RandomUTest clearbox execution smob atomspace)
 	ADD_CXXTEST(ReductUTest)
 	TARGET_LINK_LIBRARIES(ReductUTest clearbox execution smob atomspace)
+	ADD_CXXTEST(RewriteLinkUTest)
+	TARGET_LINK_LIBRARIES(RewriteLinkUTest smob atomspace)
 	ADD_CXXTEST(ScopeLinkUTest)
 	TARGET_LINK_LIBRARIES(ScopeLinkUTest smob atomspace)
 ENDIF(HAVE_GUILE)
 
 ADD_CXXTEST(AlphaConvertUTest)
-TARGET_LINK_LIBRARIES(AlphaConvertUTest atomspace)
+TARGET_LINK_LIBRARIES(AlphaConvertUTest lambda atomspace)
 
 ADD_CXXTEST(BetaReduceUTest)
 TARGET_LINK_LIBRARIES(BetaReduceUTest atomspace)
@@ -37,3 +39,6 @@ TARGET_LINK_LIBRARIES(StateLinkUTest execution atomspace)
 
 ADD_CXXTEST(VariablesUTest)
 TARGET_LINK_LIBRARIES(VariablesUTest atomspace)
+
+ADD_CXXTEST(ComposeLinkUTest)
+TARGET_LINK_LIBRARIES(ComposeLinkUTest atomspace)

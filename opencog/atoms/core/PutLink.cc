@@ -144,6 +144,11 @@ void PutLink::static_typecheck_values(void)
 		return;
 	}
 
+	// Cannot typecheck naked FunctionLinks.  For example:
+	// (cog-execute! (Put (Plus) (List (Number 2) (Number 2))))
+	if (0 == sz and classserver().isA(btype, FUNCTION_LINK))
+		return;
+
 	// The standard, default case is to get a ListLink as an argument.
 	if (LIST_LINK == vtype)
 	{
@@ -245,6 +250,7 @@ Handle PutLink::do_reduce(void) const
 {
 	Handle bods(_body);
 	Variables vars(_varlist);
+
 	// Resolve the body, if needed. That is, if the body is
 	// given in a defintion, get that defintion.
 	Type btype = _body->get_type();
@@ -266,13 +272,41 @@ Handle PutLink::do_reduce(void) const
 		LambdaLinkPtr lam(LambdaLinkCast(bods));
 		bods = lam->get_body();
 		vars = lam->get_variables();
+		btype = bods->get_type();
 	}
 
 	// Now get the values that we will plug into the body.
 	Type vtype = _values->get_type();
 
+	size_t nvars = vars.varseq.size();
+
+	// At this time, we don't know the number of arguments a FunctionLink
+	// might take.  Atomese does have the mechanisms to declare these,
+	// including arbitrary-arity functions, its just that its currently
+	// not declared anywhere.  So we just punt.  Example usage:
+	// (cog-execute! (Put (Plus) (List (Number 2) (Number 2))))
+	if (0 == nvars and classserver().isA(btype, FUNCTION_LINK))
+	{
+		if (LIST_LINK == vtype)
+			return createLink(_values->getOutgoingSet(), btype);
+
+		if (SET_LINK != vtype)
+			return createLink(btype, _values);
+
+		// If the values are given in a set, then iterate over the set...
+		HandleSeq bset;
+		for (const Handle& h : _values->getOutgoingSet())
+		{
+			if (LIST_LINK == h->get_type())
+				bset.emplace_back(createLink(h->getOutgoingSet(), btype));
+			else
+				bset.emplace_back(createLink(btype, h));
+		}
+		return createLink(bset, SET_LINK);
+	}
+
 	// If there is only one variable in the PutLink body...
-	if (1 == vars.varseq.size())
+	if (1 == nvars)
 	{
 		if (SET_LINK != vtype)
 		{
