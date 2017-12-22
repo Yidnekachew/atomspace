@@ -1,3 +1,4 @@
 
 ADD_SUBDIRECTORY (c++-api)
 ADD_SUBDIRECTORY (c++-guile)
+ADD_SUBDIRECTORY (reduct)
