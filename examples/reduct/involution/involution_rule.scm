@@ -27,25 +27,47 @@
     (List X))
   )))
 
-;; Generate involution rule for boolean negation.
-(define negation-involution-rule
- (let ((var-type (TypeChoice
-                  (TypeNode "ConceptNode")
-                  (TypeNode "AndLink")
-                  (TypeNode "OrLink")
-                  (TypeNode "NotLink"))))
-  (gen-involution-rule NotLink var-type)))
-
-(define negation-involution-rule-name
- (DefinedSchema "negation-involution-rule"))
-
-(Define negation-involution-rule-name negation-involution-rule)
-
 ;; Generate involution rule for numeric negation.
 (define minus-involution-rule
- (gen-involution-rule MinusLink (TypeNode "NumberNode")))
+ (gen-involution-rule MinusLink (TypeChoice
+                                 (TypeNode "MinusLink")
+                                 (TypeNode "NumberNode"))))
 
 (define minus-involution-rule-name
  (DefinedSchema "minus-involution-rule"))
 
 (Define minus-involution-rule-name minus-involution-rule)
+
+;; Generate involution rule for boolean negation.
+;; N.B This doesn't work. So, a custom involution rule is added below.
+;(define negation-involution-rule
+; (let ((var-type (TypeChoice
+;                  (TypeNode "ConceptNode")
+;                  (TypeNode "AndLink")
+;                  (TypeNode "OrLink")
+;                  (TypeNode "NotLink"))))
+;  (gen-involution-rule NotLink var-type)))
+
+
+;; Custom involution rule for negation.
+;; This is required to make the pattern matcher take NotLink
+;; as literal instead of boolean negation using LocalQuote.
+(define negation-involution-rule
+ (Bind
+
+  (VariableList
+   (TypedVariable (Variable "$X") (TypeChoice
+                                   (Type "PredicateNode")
+                                   (Type "NotLink"))))
+
+  (LocalQuote (Not (Not (Variable "$X"))))
+
+  (ExecutionOutput
+   (GroundedSchemaNode "scm: return-value")
+   (Variable "$X")))
+)
+
+(define negation-involution-rule-name
+ (DefinedSchema "negation-involution-rule"))
+
+(Define negation-involution-rule-name negation-involution-rule)

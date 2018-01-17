@@ -16,7 +16,7 @@
 
 (ure-add-rules reduct-rule-base reduct-rules)
 
-(ure-set-num-parameter reduct-rule-base "URE:maximum-iterations" 20)
+(ure-set-num-parameter reduct-rule-base "URE:maximum-iterations" 18)
 
 (define (reduce source)
  (cog-fc reduct-rule-base source))

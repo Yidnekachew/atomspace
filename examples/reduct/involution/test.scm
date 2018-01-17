@@ -1,10 +1,10 @@
-(use-modules (opencog) (opencog query) (opencog exec))
+(use-modules (opencog) (opencog query))
 
 (load "reduct.scm")
 
-(define X (Concept "X"))
+;; Tests for negation involution rule.
 
-(define three (Number "3"))
+(define X (Predicate "X"))
 
 ;; ~X = ~X
 (define test_1 (Not X))
@@ -27,11 +27,19 @@
 ;; ~(~X) || ~(~X) = X || X
 (define test_7 (Or (Not (Not X)) (Not (Not X))))
 
+;; Tests for minus involution rule.
+
+(define three (Number "3"))
+
 ;; -(-3) = 3
 (define test_1_num (Minus (Minus three)))
 
-;(cog-execute! involution-rule)
+;; -(-(-3)) = -3
+(define test_2_num (Minus (Minus (Minus three))))
 
-(reduce test_2)
+;; -(-(-(-3))) = 3
+(define test_3_num (Minus (Minus (Minus (Minus three)))))
 
-;(reduce test_1_num)
+(reduce test_3)
+
+;(reduce test_3_num)
